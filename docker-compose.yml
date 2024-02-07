@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/var/www/backend
+    depends_on:
+      - db
+    environment:
+      # - DATABASE_URL="mysql://docupet:password@db:3306/docupet?serverVersion=10.5.8-MariaDB"
+      - DATABASE_URL=mysql://root:root_password@db:3306/docupet
+      - APP_ENV=dev
+      - MYSQL_USER=docupet
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=docupet
+      - MYSQL_ROOT_PASSWORD=root_password
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - VUE_APP_API_URL="http://backend:9000"  # Assuming backend runs on port 9000
+      - NODE_ENV=development
+
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'docupet'
+      MYSQL_USER: 'docupet'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'root_password'
+    ports:
+      - "3306:3306"
