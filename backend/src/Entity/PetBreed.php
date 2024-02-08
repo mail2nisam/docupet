@@ -16,11 +16,12 @@ class PetBreed
     #[ORM\Column(length: 255)]
     private ?string $breed = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
     private ?PetType $type = null;
 
     #[ORM\Column]
-    private ?bool $is_dangerous = null;
+    private ?bool $is_dangerous = false;
 
     public function getId(): ?int
     {

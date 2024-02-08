@@ -2,6 +2,8 @@
 
 namespace App\Security;
 
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -11,6 +13,13 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
 {
+
+    private $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
     /**
      * Symfony calls this method if you use features like switch_user
      * or remember_me.
@@ -22,11 +31,13 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
      */
     public function loadUserByIdentifier($identifier): UserInterface
     {
-        // Load a User object from your data source or throw UserNotFoundException.
-        // The $identifier argument may not actually be a username:
-        // it is whatever value is being returned by the getUserIdentifier()
-        // method in your User class.
-        throw new \Exception('TODO: fill in loadUserByIdentifier() inside '.__FILE__);
+
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $identifier]);
+        if (!$user) {
+            throw new UserNotFoundException(sprintf('User "%s" not found.', $identifier));
+        }
+
+        return $user;
     }
 
     /**
