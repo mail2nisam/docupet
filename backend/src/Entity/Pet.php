@@ -2,18 +2,17 @@
 
 namespace App\Entity;
 
+use App\Entity\Traits\TimestampableTrait;
 use App\Repository\PetRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Validator\Constraints as Assert;
-// use Gedmo\Mapping\Annotation\Timestampable as Timestampable;
 
 #[ORM\Entity(repositoryClass: PetRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Pet
 {
-    use TimestampableEntity;
-
+    use TimestampableTrait;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -36,15 +35,6 @@ class Pet
 
     #[ORM\Column(length: 10)]
     private ?string $gender = null;
-
-    // #[Timestampable(on: "create")]
-    // #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-
-    // private $createdAt;
-
-    // #[Timestampable(on: "update")]
-    // #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    // private $updatedAt;
 
 
     public function getId(): ?int
@@ -111,15 +101,4 @@ class Pet
 
         return $this;
     }
-
-    // public function getCreatedAt(): ?\DateTimeInterface
-    // {
-    //     return $this->createdAt;
-    // }
-
-
-    // public function getUpdatedAt(): ?\DateTimeInterface
-    // {
-    //     return $this->updatedAt;
-    // }
 }

@@ -26,23 +26,58 @@ class PetController extends AbstractController
     }
 
     #[Route('/pet', methods: ['GET'], name: 'app_pet')]
-    public function index(): JsonResponse
+    public function index(EntityManagerInterface $entityManager,): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/PetController.php',
-        ]);
+        $pets = $entityManager->getRepository(Pet::class)->findAllWithBreedAndType();
+
+        $responseData = [];
+        foreach ($pets as $pet) {
+            $responseData[] = $this->serializePet($pet);
+        }
+
+        return new JsonResponse($responseData);
     }
 
-    #[Route('/pet', methods:['POST'], name: 'app_new_pet')]
+    #[Route('/pet/{id}', methods: ['GET'], name: 'app_pet_details')]
+
+    public function show(Pet $id, EntityManagerInterface $entityManager,): JsonResponse
+    {
+        $pet = $entityManager->getRepository(Pet::class)->find($id);
+
+        $responseData = $this->serializePet($pet);
+
+
+        return new JsonResponse($responseData);
+    }
+
+    // Serialize the pet entity with its breed and pet type
+    private function serializePet(Pet $pet): array
+    {
+        return [
+            'id' => $pet->getId(),
+            'name' => $pet->getName(),
+            'breed' => [
+                'id' => $pet->getBreed()->getId(),
+                'name' => $pet->getBreed()->getBreed(),
+                'is_dangerous' => $pet->getBreed()->isIsDangerous()
+            ],
+            'pet_type' => [
+                'id' => $pet->getBreed()->getType()->getId(),
+                'name' => $pet->getBreed()->getType()->getType(),
+
+            ],
+            'dob' => $pet->getDob()->format('Y-m-d'),
+            'is_approximate' => $pet->isIsApproximate(),
+            'gender' => $pet->getGender(),
+
+        ];
+    }
+    #[Route('/pet', methods: ['POST'], name: 'app_new_pet')]
 
     public function create(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         // Process and validate the request data
         $data = json_decode($request->getContent(), true);
-        // Validate $data using Symfony's validation component
-        // dd($data);
-        // Create and persist the new pet entity
 
 
 
@@ -56,9 +91,8 @@ class PetController extends AbstractController
 
         $isApproximateBirthDate = false;
         if (array_key_exists('dob', $data)) {
-            $birthDate= $data['dob'];
+            $birthDate = $data['dob'];
             $dob = DateTime::createFromFormat('Y-m-d', $birthDate);
-
         } else {
             if (array_key_exists('age', $data)) {
                 $currentDate = new DateTime();
@@ -76,11 +110,13 @@ class PetController extends AbstractController
         $pet->setDob($dob);
         $pet->setIsApproximate($isApproximateBirthDate);
 
+
+
         $errors = $validator->validate($pet);
         if (count($errors) > 0) {
 
             $errorsString = (string) $errors;
-            return new JsonResponse(['message'=> $errorsString], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => $errorsString], Response::HTTP_BAD_REQUEST);
 
             // return new Response($errorsString);
         }

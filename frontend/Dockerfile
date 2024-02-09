@@ -15,6 +15,7 @@ COPY . .
 
 # Expose port 8080
 EXPOSE 8080
+EXPOSE 8000
 
 # Start the development server
 CMD ["npm", "run", "serve"]
