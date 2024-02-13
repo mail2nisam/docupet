@@ -1,0 +1,75 @@
+@import "~bootstrap/scss/bootstrap";
+
+label {
+  text-align: left;
+}
+
+.top-paw {
+  margin-bottom: auto;
+  /* Pushes the top paw to the top */
+}
+
+.bottom-paw {
+  margin-top: auto;
+  /* Pushes the bottom paw to the bottom */
+}
+
+.paw-prints {
+  height: 50px;
+}
+
+.text-green {
+  color: green !important;
+}
+
+.container {
+  &.dashboard {
+    width: 100%;
+    max-width: 560px;
+    padding: 30px;
+
+    .paw-prints {
+      i {
+        font-size: 30px;
+        ;
+      }
+    }
+  }
+}
+
+.select-breed {
+  ul {
+    z-index: 100;
+  }
+}
+
+.placeholder-pet {
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid #dee2e6;
+
+  i {
+    font-size: 50px;
+    color: #267a29;
+  }
+}
+
+.icon-container {
+  position: relative;
+  display: inline-block;
+  font-size: 40px;
+}
+
+
+
+.fa-triangle-exclamation {
+  position: absolute;
+  top: .25em;
+  right: .25em;
+  color: #a33e3e59;
+}
+.cursor-pointer{
+  cursor: pointer;
+}

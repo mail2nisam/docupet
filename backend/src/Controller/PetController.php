@@ -3,8 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Pet;
+use App\Entity\Breed;
 use App\Entity\PetBreed;
-use App\Entity\PetType;
 use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,7 +29,6 @@ class PetController extends AbstractController
     public function index(EntityManagerInterface $entityManager,): JsonResponse
     {
         $pets = $entityManager->getRepository(Pet::class)->findAllWithBreedAndType();
-
         $responseData = [];
         foreach ($pets as $pet) {
             $responseData[] = $this->serializePet($pet);
@@ -39,7 +38,6 @@ class PetController extends AbstractController
     }
 
     #[Route('/pet/{id}', methods: ['GET'], name: 'app_pet_details')]
-
     public function show(Pet $id, EntityManagerInterface $entityManager,): JsonResponse
     {
         $pet = $entityManager->getRepository(Pet::class)->find($id);
@@ -50,49 +48,60 @@ class PetController extends AbstractController
         return new JsonResponse($responseData);
     }
 
-    // Serialize the pet entity with its breed and pet type
+    /**
+     * Serialize output
+     */
     private function serializePet(Pet $pet): array
     {
-        return [
+        $petData = [
             'id' => $pet->getId(),
             'name' => $pet->getName(),
-            'breed' => [
-                'id' => $pet->getBreed()->getId(),
-                'name' => $pet->getBreed()->getBreed(),
-                'is_dangerous' => $pet->getBreed()->isIsDangerous()
-            ],
-            'pet_type' => [
-                'id' => $pet->getBreed()->getType()->getId(),
-                'name' => $pet->getBreed()->getType()->getType(),
-
-            ],
             'dob' => $pet->getDob()->format('Y-m-d'),
-            'is_approximate' => $pet->isIsApproximate(),
+            'is_approximate_dob' => $pet->isApproximateDOB(),
             'gender' => $pet->getGender(),
-
+            'cross_breed' => $pet->isCrossBreed()
         ];
-    }
-    #[Route('/pet', methods: ['POST'], name: 'app_new_pet')]
 
+        $breedsData = [];
+        foreach ($pet->getBreed() as $petBreed) {
+            $breed = $petBreed->getBreed();
+            if ($breed) {
+                $breedsData[] = [
+                    'id' => $breed->getId(),
+                    'name' => $breed->getBreed(),
+                    'is_dangerous' => $breed->isIsDangerous(),
+                    'type' => [
+                        'id' => $breed->getType()->getId(),
+                        'name' => $breed->getType()->getType()
+                    ],
+                ];
+            }
+        }
+
+        $petData['breeds'] = $breedsData;
+
+        return $petData;
+    }
+
+    #[Route('/pet', methods: ['POST'], name: 'app_new_pet')]
     public function create(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
-        // Process and validate the request data
         $data = json_decode($request->getContent(), true);
-
-
-
-        $breed = $entityManager->getRepository(PetBreed::class)->find($data['breed']);
-
-        if (!$breed) {
-            // Handle the case where the PetType with the provided ID is not found
-            return new JsonResponse(['error' => 'PetType not found'], Response::HTTP_NOT_FOUND);
+        $selectedBreeds = isset($data['breed']) ? $data['breed'] : [];
+        $breeds = [];
+        if($selectedBreeds){
+            $breeds  = $entityManager->getRepository(Breed::class)->findBy(['id' => $selectedBreeds]);
+            if (!$breeds) {
+                return new JsonResponse(['error' => 'Breed not found'], Response::HTTP_NOT_FOUND);
+            }
         }
+
         $dob = '';
 
         $isApproximateBirthDate = false;
         if (array_key_exists('dob', $data)) {
             $birthDate = $data['dob'];
-            $dob = DateTime::createFromFormat('Y-m-d', $birthDate);
+            $dob = DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $birthDate);
         } else {
             if (array_key_exists('age', $data)) {
                 $currentDate = new DateTime();
@@ -102,25 +111,27 @@ class PetController extends AbstractController
             }
         }
 
-
         $pet = new Pet();
         $pet->setName($data['name']);
         $pet->setGender($data['gender']);
-        $pet->setBreed($breed);
+        $pet->setIsCrossBreed(isset($data['is_cross_breed'])? $data['is_cross_breed']: false );
+
+        foreach ($breeds as $breed) {
+            $petBreed = new PetBreed();
+            $petBreed->setPet($pet);
+            $petBreed->setBreed($breed);
+            $pet->addBreed($petBreed);
+        }
+
         $pet->setDob($dob);
         $pet->setIsApproximate($isApproximateBirthDate);
-
-
 
         $errors = $validator->validate($pet);
         if (count($errors) > 0) {
 
             $errorsString = (string) $errors;
             return new JsonResponse(['message' => $errorsString], Response::HTTP_BAD_REQUEST);
-
-            // return new Response($errorsString);
         }
-        // Set properties of $pet based on $data
 
         $entityManager->persist($pet);
         $entityManager->flush();

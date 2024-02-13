@@ -4,11 +4,12 @@ const state = {
 };
 
 const mutations = {
-
     setLoggedIn(state, isLoggedIn) {
         state.isLoggedIn = isLoggedIn;
     },
     setToken(state, token) {
+
+
         state.token = token;
     }
 };
@@ -24,14 +25,26 @@ const actions = {
                 body: JSON.stringify({ username, password })
             });
             const data = await response.json();
+            // if (!data.token) {
+            //     // If token is not found in response data, remove existing token from local storage if any
+            //     localStorage.removeItem('token');
+
+            //     // Update Vuex store to reflect logged out state
+            //     commit('setLoggedIn', false);
+            //     commit('setToken', '2222222222222222');
+
+            //     throw new Error('Token not found in response');
+            // }
             const token = data.token;
 
+
             // Set token in local storage
-            localStorage.setItem('token', token);
 
             // Update Vuex store
             commit('setLoggedIn', true);
             commit('setToken', token);
+            localStorage.setItem('token', token);
+
 
             return true; // Login successful
         } catch (error) {

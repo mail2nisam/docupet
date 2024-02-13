@@ -24,8 +24,9 @@ class PetRepository extends ServiceEntityRepository
     public function findAllWithBreedAndType(): array
     {
         return $this->createQueryBuilder('p')
-            ->leftJoin('p.breed', 'b')
-            ->leftJoin('b.type', 'pt')
+            ->leftJoin('p.breed', 'pb')
+            ->leftJoin('pb.breed', 'b')
+            ->leftJoin('b.type', 't')
             ->getQuery()
             ->getResult();
     }

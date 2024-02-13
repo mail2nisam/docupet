@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Entity\Traits\TimestampableTrait;
 use App\Repository\PetRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -23,18 +25,26 @@ class Pet
     #[Assert\Type('string')]
     private ?string $name = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?PetBreed $breed = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dob = null;
 
     #[ORM\Column]
-    private ?bool $is_approximate = false;
+    private ?bool $approximate_dob = false;
+
+    #[ORM\Column]
+    private ?bool $cross_breed = false;
 
     #[ORM\Column(length: 10)]
     private ?string $gender = null;
+
+    #[ORM\OneToMany(targetEntity: PetBreed::class, mappedBy: 'pet', cascade: ['persist'])]
+    private Collection $breed;
+
+    public function __construct()
+    {
+        $this->breed = new ArrayCollection();
+    }
 
 
     public function getId(): ?int
@@ -54,17 +64,6 @@ class Pet
         return $this;
     }
 
-    public function getBreed(): ?PetBreed
-    {
-        return $this->breed;
-    }
-
-    public function setBreed(?PetBreed $breed): static
-    {
-        $this->breed = $breed;
-
-        return $this;
-    }
 
     public function getDob(): ?\DateTimeInterface
     {
@@ -78,14 +77,26 @@ class Pet
         return $this;
     }
 
-    public function isIsApproximate(): ?bool
+    public function isApproximateDOB(): ?bool
     {
-        return $this->is_approximate;
+        return $this->approximate_dob;
     }
 
-    public function setIsApproximate(bool $is_approximate): static
+    public function setIsApproximate(bool $is_approximate_dob): static
     {
-        $this->is_approximate = $is_approximate;
+        $this->approximate_dob = $is_approximate_dob;
+
+        return $this;
+    }
+
+    public function isCrossBreed(): ?bool
+    {
+        return $this->cross_breed;
+    }
+
+    public function setIsCrossBreed(bool $is_cross_breed): static
+    {
+        $this->cross_breed = $is_cross_breed;
 
         return $this;
     }
@@ -98,6 +109,36 @@ class Pet
     public function setGender(string $gender): static
     {
         $this->gender = $gender;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PetBreed>
+     */
+    public function getBreed(): Collection
+    {
+        return $this->breed;
+    }
+
+    public function addBreed(PetBreed $breed): static
+    {
+        if (!$this->breed->contains($breed)) {
+            $this->breed->add($breed);
+            $breed->setPet($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBreed(PetBreed $breed): static
+    {
+        if ($this->breed->removeElement($breed)) {
+            // set the owning side to null (unless already changed)
+            if ($breed->getPet() === $this) {
+                $breed->setPet(null);
+            }
+        }
 
         return $this;
     }

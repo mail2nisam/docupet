@@ -2,7 +2,7 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\PetBreed;
+use App\Entity\Breed;
 use App\Entity\PetType;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -56,7 +56,7 @@ class AppFixtures extends Fixture
         ];
 
         foreach ($cats as $cat) {
-            $breedEntity = new PetBreed();
+            $breedEntity = new Breed();
             $breedEntity->setType($catType);
             $breedEntity->setBreed($cat);
             $manager->persist($breedEntity);
@@ -80,7 +80,7 @@ class AppFixtures extends Fixture
         ];
 
         foreach ($dogs as $dog) {
-            $breedEntity = new PetBreed();
+            $breedEntity = new Breed();
             $breedEntity->setType($dogType);
             $breedEntity->setBreed($dog['name']);
             $breedEntity->setIsDangerous($dog['is_dangerous']);
