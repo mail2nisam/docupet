@@ -7,15 +7,11 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application files
-COPY . .
+# Create an entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Expose port 8080
 EXPOSE 8080
-EXPOSE 8000
-
-# Start the development server
 CMD ["npm", "run", "serve"]
