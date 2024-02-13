@@ -145,7 +145,7 @@ export default {
                 age: this.age,
                 gender: this.gender
             }
-            formData.breed = this.isCRossBreed ? this.mixBreeds : [this.selectedBreed.id]
+            formData.breed = this.isCRossBreed ? this.mixBreeds : [this.selectedBreed?.id]
             const token = localStorage.getItem('token');
             const config = {
                 headers: {
